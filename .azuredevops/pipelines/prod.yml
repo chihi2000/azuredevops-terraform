@@ -4,21 +4,24 @@ stages:
   - stage: ProdPlan
     displayName: 'Plan Prod Environment'
     jobs:
+     #  Reuse apply logic from external template 
       - template: templates/plan.yml
         parameters:
           environment: 'prod'
 
   - stage: ProdApply
     displayName: 'Apply Prod Environment'
+    # depends on the  successful completion of prodplan
     dependsOn: ProdPlan
     condition: succeeded()
     jobs:
       - deployment: ApplyProd
-        environment: 'prod'  # Gates + approval here
+        environment: 'prod'  
         strategy:
           runOnce:
             deploy:
               steps:
+               #  Reuse apply logic from external template 
                 - template: templates/apply.yml
                   parameters:
                     environment: 'prod'

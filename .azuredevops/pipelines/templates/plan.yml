@@ -1,12 +1,13 @@
 jobs:
   - job: Plan
     displayName: "Terraform Plan ${{ parameters.environment }}"
+    # self hosted pool (a docker container in az vm)
     pool:
       name: terraform-agents 
    
     steps:
       - checkout: self
-
+      # inistialization and backend env specific configs
       - task: TerraformTaskV4@4
         displayName: Terraform Init
         inputs:
@@ -18,13 +19,13 @@ jobs:
           backendAzureRmStorageAccountName: '$(BACKEND_STORAGE_ACCOUNT_NAME)'
           backendAzureRmContainerName: '$(BACKEND_CONTAINER_NAME)'
           backendAzureRmKey: '$(BACKEND_KEY)'
-
+      # validate the code 
       - script: |
           terraform validate
           echo "Validation completed"
         workingDirectory: environments/${{ parameters.environment }}
         displayName: 'Terraform Validate'
-
+      # plan the changes
       - task: TerraformTaskV4@4
         displayName: 'Terraform Plan'
         inputs:

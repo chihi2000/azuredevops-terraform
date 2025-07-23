@@ -3,14 +3,15 @@ parameters:
     type: string
 
 steps:
+  # check out the source code from the current repository
   - checkout: self
-
+  # download the artifact created by terraform plan
   - task: DownloadPipelineArtifact@2
     displayName: 'Download Terraform Plan'
     inputs:
       artifactName: 'tfplan_${{ parameters.environment }}'
       targetPath: 'environments/${{ parameters.environment }}'
-
+  # initialization and env specific backend config
   - task: TerraformTaskV4@4
     displayName: Terraform Init
     inputs:
@@ -22,7 +23,7 @@ steps:
       backendAzureRmStorageAccountName: '$(BACKEND_STORAGE_ACCOUNT_NAME)'
       backendAzureRmContainerName: '$(BACKEND_CONTAINER_NAME)'
       backendAzureRmKey: '$(BACKEND_KEY)'
-
+  # applying changes
   - task: TerraformTaskV4@4
     displayName: Terraform Apply
     inputs:

@@ -1,24 +1,28 @@
+# pointing the trigger on main branch
 trigger:
   branches:
     include: [main]
 
 variables:
   - group: terraform-backend-dev
-
+# requiring a pull request before merging to main
 pr:
   branches:
     include: [main]
 
 stages:
+ 
   - stage: DevPlan
     displayName: 'Plan Dev Environment'
     jobs:
+     # Reuse plan logic from external template
       - template: templates/plan.yml
         parameters:
           environment: 'dev'
 
   - stage: DevApply
     displayName: 'Apply Dev Environment'
+    # This stage depends on the successful completion of devplan
     dependsOn: DevPlan
     condition: succeeded()
     jobs:
@@ -26,10 +30,12 @@ stages:
         environment: 'dev'
         pool:
           name: terraform-agents
+        # deployment strategy 
         strategy:
           runOnce:
             deploy:
               steps:
+              #  Reuse apply logic from external template 
                 - template: templates/apply.yml
                   parameters:
                     environment: 'dev'
