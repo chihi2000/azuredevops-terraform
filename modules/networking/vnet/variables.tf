@@ -6,7 +6,7 @@ variable "vnet_name" {
 variable "address_space" {
   description = "The address space for the virtual network"
   type        = list(string)
-  default     = ["10.0.0.0/16"]
+
 }
 
 variable "resource_group_name" {
