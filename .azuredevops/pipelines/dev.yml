@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include: [main]
+
+variables:
+  - group: terraform-backend-dev
+
+pr:
+  branches:
+    include: [main]
+
+stages:
+  - stage: DevPlan
+    displayName: 'Plan Dev Environment'
+    jobs:
+      - template: templates/plan.yml
+        parameters:
+          environment: 'dev'
+
+  - stage: DevApply
+    displayName: 'Apply Dev Environment'
+    dependsOn: DevPlan
+    condition: succeeded()
+    jobs:
+      - deployment: ApplyDev
+        environment: 'dev'
+        pool:
+          name: terraform-agents
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/apply.yml
+                  parameters:
+                    environment: 'dev'

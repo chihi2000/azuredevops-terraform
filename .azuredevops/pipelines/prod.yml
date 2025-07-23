@@ -1,0 +1,24 @@
+trigger: none  # only manual runs for prod
+
+stages:
+  - stage: ProdPlan
+    displayName: 'Plan Prod Environment'
+    jobs:
+      - template: templates/plan.yml
+        parameters:
+          environment: 'prod'
+
+  - stage: ProdApply
+    displayName: 'Apply Prod Environment'
+    dependsOn: ProdPlan
+    condition: succeeded()
+    jobs:
+      - deployment: ApplyProd
+        environment: 'prod'  # Gates + approval here
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/apply.yml
+                  parameters:
+                    environment: 'prod'
