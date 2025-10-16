@@ -1,0 +1,25 @@
+---
+# severity level (medium, high, low or critical)
+minimum_severity: MEDIUM
+
+exclude:
+  # if you wanna exclude specific checks, uncomment and add them here
+  # - azure-storage-queue-services-logging-enabled
+  # - azure-container-logging
+  
+# Change severity of specific checks
+severity_overrides:
+  # Make storage account network rules critical
+  azure-storage-default-action-deny: ERROR
+  # Make Key Vault network ACL a warning instead of error
+  azure-keyvault-specify-network-acl: WARNING
+  # Ensure NSGs don't allow unrestricted access
+  azure-network-ssh-blocked-from-internet: ERROR
+  azure-network-rdp-blocked-from-internet: ERROR
+
+# Exclude certain directories from scanning
+exclude_paths:
+  - ".terraform/**"
+  - "**/.terraform/**"
+  - "**/test/**"
+  - "**/*_test.tf"

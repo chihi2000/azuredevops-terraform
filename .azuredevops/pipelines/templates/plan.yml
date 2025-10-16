@@ -5,7 +5,7 @@ parameters:
     type: string
 
 jobs:
-  # security scan for terraform
+  # security scan for terraform it maybe not needed at this point but it is important when the infrastructure grows
   - job: SecurityScan
     displayName: "Security Scan - ${{ parameters.environment }}"
     pool:
