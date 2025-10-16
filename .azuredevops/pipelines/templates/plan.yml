@@ -1,13 +1,57 @@
+parameters:
+  - name: environment
+    type: string
+  - name: workingDirectory
+    type: string
+
 jobs:
+  # security scan for terraform
+  - job: SecurityScan
+    displayName: "Security Scan - ${{ parameters.environment }}"
+    pool:
+      name: terraform-agents
+    
+    steps:
+      - checkout: self
+      
+      - task: Bash@3
+        displayName: 'Install tfsec'
+        inputs:
+          targetType: 'inline'
+          script: |
+            curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+            tfsec --version
+
+      - task: Bash@3
+        displayName: 'Security Scan - tfsec'
+        inputs:
+          targetType: 'inline'
+          workingDirectory: environments/${{ parameters.environment }}
+          script: |
+            tfsec . --format junit --out tfsec-results.xml
+            tfsec . --format default --minimum-severity MEDIUM
+        continueOnError: false
+
+      - task: PublishTestResults@2
+        displayName: 'Publish Security Results'
+        condition: always()
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'environments/${{ parameters.environment }}/tfsec-results.xml'
+          testRunTitle: 'tfsec - ${{ parameters.environment }}'
+          failTaskOnFailedTests: false
+
+  # plan job (only runs if security scan passes)
   - job: Plan
     displayName: "Terraform Plan ${{ parameters.environment }}"
-    # self hosted pool (a docker container in az vm)
+    dependsOn: SecurityScan
+    condition: succeeded()
     pool:
       name: terraform-agents 
    
     steps:
       - checkout: self
-      # inistialization and backend env specific configs
+      
       - task: TerraformTaskV4@4
         displayName: Terraform Init
         inputs:
@@ -19,13 +63,13 @@ jobs:
           backendAzureRmStorageAccountName: '$(BACKEND_STORAGE_ACCOUNT_NAME)'
           backendAzureRmContainerName: '$(BACKEND_CONTAINER_NAME)'
           backendAzureRmKey: '$(BACKEND_KEY)'
-      # validate the code 
+      
       - script: |
           terraform validate
           echo "Validation completed"
         workingDirectory: environments/${{ parameters.environment }}
         displayName: 'Terraform Validate'
-      # plan the changes
+      
       - task: TerraformTaskV4@4
         displayName: 'Terraform Plan'
         inputs:
@@ -35,7 +79,6 @@ jobs:
           environmentServiceNameAzureRM: 'connect-terraform-azure'
           commandOptions: '-out=tfplan'
       
-      # publish the plan file as a pipeline artifact
       - task: PublishPipelineArtifact@1
         displayName: 'Publish Terraform Plan Artifact'
         inputs:
