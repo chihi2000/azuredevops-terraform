@@ -10,7 +10,7 @@ variable "address_space" {
   type = list(string)
 }
 
-# Subnets Configuration
+# subnets Configuration
 variable "subnets" {
   description = "Map of subnets with their configurations"
   type = map(object({
